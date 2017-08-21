@@ -28,7 +28,8 @@ In your file, put the following code:
 ```pony
 actor Main
   new create(env: Env) =>
-    env.out.print("Hello, world!")```
+    env.out.print("Hello, world!")
+```
     
 #### Compiling your program
 
@@ -36,7 +37,9 @@ If you are in the same directory as your program, you can just do:
 ``` $ ponyc ```
 That tells the Pony compiler that your current working directory contains your source code, and to please compile it. If your source code is in some other directory, you can tell ponyc where it is:
 
-``` $ ponyc path/to/my/code ```
+``` 
+$ ponyc path/to/my/code 
+```
 
 #### Running your program
 Now we can run the program:
@@ -45,12 +48,12 @@ $ ./helloworld
 Hello, world! 
 ```
 #### How it works
-```actor Main```
+``` actor Main ```
 This is a **type declaration**. The keyword `actor` means we are going to define an actor, which is a bit like a class in Python, Java, C#, C++, etc. Pony has classes too.
 The difference between an `actor` and a `class` is that an actor can have asynchronous methods, called behaviours.
 A Pony program has to have a `Main` actor. It's kind of like the main function in C or C++, or the main method in Java, or the `Main` method in C#. It's where the action starts.
 
-```new create(env: Env) => ```
+``` new create(env: Env) => ```
 This is a constructor. The keyword new means it's a function that creates a new instance of the type. In this case, it creates a new Main. Unlike other languages, constructors in Pony have names. That means there can be more than one way to construct an instance of a type. In this case, the name of the constructor is create. The parameters of a function come next. In this case, our constructor has a single parameter called env that is of the type Env.
 
 In Pony, the type of something always comes after its name and is separated by a colon. In C, C++, Java or C#, you might say Env env, but we do it the other way around (like Go, Pascal, and a bunch of other languages).
