@@ -117,7 +117,6 @@ __Do all types start with a capital letter?__ Yes! And nothing else starts with 
 ### What goes in a class?
 
 A class is composed of:
-
 1. Fields.
 2. Constructors.
 3. Functions.
@@ -175,11 +174,11 @@ class Wombat
   var _hunger_level: U64
   var _thirst_level: U64 = 1    //_thirst_level is assigned the value 1 not matter which constructor is called
 
-  new create(name': String) =>
+  new create(name': String) =>            //1st constructor
     name = name'
     _hunger_level = 0
 
-  new hungry(name': String, hunger': U64) =>
+  new hungry(name': String, hunger': U64) =>      //2nd constructor
     name = name'
     _hunger_level = hunger'
 ```
