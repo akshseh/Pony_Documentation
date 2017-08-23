@@ -104,7 +104,7 @@ Pony is a _statically typed_ language, like Java, C#, C++, and many others. This
 
 When you use a _statically typed_ language, a variable has a type. That is, it can only point to objects of a certain type. If you have an `x` that expects to point to an integer, you can't assign a string to it. Your compiler complains, and it complains __before__ you ever try to run your program.
 
-## Classes
+### Classes
 
 Just like other object-oriented languages, Pony has __classes__. A class is declared with the keyword `class`, and it has to have a name that starts with a __capital letter__, like this:
 
@@ -114,7 +114,7 @@ class Wombat
 
 __Do all types start with a capital letter?__ Yes! And nothing else starts with a capital letter. So when you see a name in Pony code, you will instantly know whether it's a type or not.
 
-### What goes in a class?
+#### What goes in a class?
 
 A class is composed of:
 1. Fields.
@@ -162,7 +162,7 @@ let defaultWombat = Wombat("Fantastibat") // Invokes the create method by defaul
 let hungryWombat = Wombat.hungry("Nomsbat", 12) // Invokes the hungry method
 ```
 
-__What's with the single quote thing, i.e. name'?__ You can use single quotes in parameter and local variable names. In mathematics, it's called a _prime_, and it's used to say "another one of these, but not the same one". Basically, it's just convenient.
+__What's with the single quote thing, i.e. `name'`?__ You can use single quotes in parameter and local variable names. In mathematics, it's called a _prime_, and it's used to say "another one of these, but not the same one". Basically, it's just convenient.
 
 Every constructor has to set every field in an object. If it doesn't, the compiler will give you an error. Since there is no `null` in Pony, we can't do what Java, C# and many other languages do and just assign either `null` or zero to every field before the constructor runs, and since we don't want random crashes, we don't leave fields undefined (unlike C or C++).
 
@@ -279,7 +279,7 @@ A __primitive__ is similar to a __class__, but there are two critical difference
 
 Having no fields means primitives are never mutable. Having a single instance means that if your code calls a constructor on a __primitive__ type, it always gets the same result back (except for built-in "machine word" primitives, covered below).
 
-## What can you use a __primitive__ for?
+#### What can you use a __primitive__ for?
 
 There are three main uses of primitives (four, if you count built-in "machine word" primitives).
 
