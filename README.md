@@ -173,7 +173,7 @@ Sometimes it's convenient to set a field the same way for all constructors.
 class Wombat
   let name: String
   var _hunger_level: U64
-  var _thirst_level: U64 = 1
+  var _thirst_level: U64 = 1    //_thirst_level is assigned the value 1 not matter which constructor is called
 
   new create(name': String) =>
     name = name'
@@ -184,7 +184,7 @@ class Wombat
     _hunger_level = hunger'
 ```
 
-Here, every `Wombat` begins a little bit thirsty, regardless of which constructor is called.
+Here, every `Wombat` begins a little bit thirsty (it has `_thirst_level` equal to `1`), regardless of which constructor is called.
 
 #### Functions
 
