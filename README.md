@@ -1924,3 +1924,183 @@ Under the hood, we're assembling an object literal for partial application. It c
 
 That means partial application results in an anonymous class and returns a `ref`. If you need another reference capability, you can wrap partial application in a `recover` expression.
 
+# Gotchas
+
+Every programming language has gotchas. Those "wat" moments that make us all laugh when someone does a presentation on them. They often shoot to the top of sites like Hacker News and Reddit. It's all in good fun, except, it isn't. Each of those gotchas and the laughs we get from them, hide someone's pain. This chapter covers some common Pony gotchas that new Pony programmers often stumble across with painful results. Probably the best way to approach this chapter is to imagine each section has a giant flashing "DO NOT DO THIS" sign.
+
+# Divide by Zero
+
+What's 1 divided by 0? How about 10 divided by 0? What is the result you get in your favorite programming language? 
+
+In math, divide by zero is undefined. There is no answer to that question as the expression 1/0 has no meaning. In many programming languages, the answer is a runtime exception that the user has to handle. In Pony, things are a bit different.
+
+## Divide by zero in Pony
+
+In Pony, *divide by zero results in zero*. That's right,
+
+```pony
+let x = 1 / 0
+```
+
+results in `0` being assigned to `x`. Insane right? Well, yes and no. From a mathematical standpoint, it is very much insane. From a practical standpoint, it is very much not. 
+
+## Partial functions and math in Pony
+
+As you might remember from the [exceptions portion of this tutorial](/expressions/exceptions.html), Pony handles extraordinary circumstances via the `error` keyword and partial functions. In an ideal world, you might imagine that a Pony divide method for `U64` might look like:
+
+```pony
+fun divide(n: U64, d: 64) ? =>
+  if d == 0 then error end
+
+  n / d
+```
+
+We indicate that our function is partial via the `?` because we can't compute a result for all inputs. In this case, having 0 as a denominator. In fact, originally, this is how division worked in Pony. And then practicality intervened.
+
+## Death by a thousand `try`s
+
+From a practical perspective, having division as a partial function is awful. You end up with code littered with `try`s attempting to deal with the possibility of division by zero. Even if you had asserted that your denominator was not zero, you'd still need to protect against divide by zero because, at this time, the compiler can't detect that value dependent typing. So, as of right now (ponyc v0.2), divide by zero in Pony does not result in `error` but rather `0`. 
+
+# Garbage Collection
+
+There's a common GC anti-pattern that many new Pony programmers accidentally stumble across. Usually, this results in a skyrocketing memory usage in their test program and questions on the mailing list and IRC as to why Pony isn't working correctly. It is, in fact, working correctly, albeit not obviously.
+
+## Garbage Collection in the world at large
+
+Garbage collection, in most languages, can run at any time. Your program can be paused so that memory can be freed up. This sucks if you want predictable completion of sections of code. Most of the time, your function will finish in less than a millisecond but every now and then, its paused during execution to GC. There are advantages to this approach. Whenever you run low on memory, the GC can attempt to free some memory and get you more. In general, this is how people expect Pony's garbage collector to work. As you might guess though, it doesn't work that way.
+
+## Garbage Collection in Pony
+
+Garbage collection is never attempted on any actor while it is executing a behavior. This gives you very predictable performance when executing behaviors but also makes it easy to grab way more memory than you intend to. Let's take a look at how that can happen via the "long-running behavior problem".
+
+## Long running behaviors and memory
+
+Here's a typical "I'm learning Pony" program:
+
+```pony
+actor Main
+  new create(env: Env)
+    for i in Range(1, 2_000_000) do
+      ... something that uses up heap ... 
+    end
+```
+
+This program will never garbage collect before exiting. `create` is run as a behavior on actors which means that no garbage collection will occur while it's running. Long loops in behaviors are a good way to exhaust memory. Don't do it. If you want to execute something in such a fashion, use a [Timer](http://stdlib.ponylang.org/time-Timer/).
+
+# Appendix
+
+Welcome to the appendix; the land of misshapen and forgotten documentation. Ok, not really forgotten just... 'lesser' sounds wrong. Some of this material could get some loving and be promoted to a full chapter, some are always going to be an appendix, some might be worthy of a short book unto itself. Right now though it lives here, have a look through. You'll find a lexicon of standard Pony terminology, a symbol lookup cheat sheet that can help you locate documentation on all our funny symbols like ^, ! and much more.
+
+# Pony Lexicon
+
+Words are hard. We can all be saying the same thing but do we _mean_ the same thing? It's tough to know. Hopefully, this lexicon helps a little.
+
+## Terminology
+
+**Braces**: { }. Synonymous with curly brackets.
+
+**Brackets**: This term is ambiguous. In the UK it usually means ( ) in the US is usually means [ ]. It should, therefore, be avoided for use for either of these. Can be used as a general term for any unspecified grouping punctuation, including { }.
+
+**Compatible type**: Two types are compatible if there can be any single object which is an instance of both types. Note that a suitable type for the single object does not have to have been defined, as long as it could be. For example, any two traits are compatible because a class could be defined that provides both of them, even if such a class has not been defined. Conversely, no two classes can ever be compatible because no object can be an instance of both.
+
+**Compound type**: A type combining multiple other types, ie union, intersection, and tuple. Opposite of a single type.
+
+**Concrete type**: An actor, class or primitive.
+
+**Curly brackets**: { }. Synonymous with braces.
+
+**Declaration** and **definition**: synonyms for each other, we do not draw the C distinction between forward declarations and full definitions.
+
+**Default method body**: Method body defined in a trait and optionally used by concrete types.
+
+**Entity**: Top level definition within a file, ie alias, trait, actor, class, primitive.
+
+**Explicit type**: An actor, class or primitive.
+
+**Member**: Method or field.
+
+**Method**: Something callable on a concrete type/object. Function, behaviour or constructor.
+
+**Override**: When a concrete type has its own body for a method with a default body provided by a trait.
+
+**Parentheses**: ( ). Synonymous with round brackets.
+
+**Provide**: An entity's usage of traits and the methods they contain. Equivalent to implements or inherits from.
+
+**Round brackets**: ( ). Synonymous with parentheses.
+
+**Single type**: Any type which is not defined as a collection of other types. Actors, classes, primitives, traits and structural types are all single types. Opposite of a compound type.
+
+**Square brackets**: [ ]
+
+**Trait clash**: A trait clashes with another type if it contains a method with the same name, but incompatible signature as a method in the other type. A clashing trait is incompatible with the other type. Traits can clash with actors, classes, primitives, intersections, structural types and other traits.
+
+# Pony Symbols
+
+Pony, like just about any other programming language, has plenty of odd symbols that make up its syntax. If you don't remember what one means, it can be hard to search for them. Below you'll find a table with various Pony symbols and what you should search the tutorial for in order to learn more about the symbol.
+
+|Symbol | Search Keywords|
+| --- | --- |
+| `!`  | Alias |
+| `->` | Arrow type, viewpoint |
+| `^`  | Ephemeral |
+| `@`  | FFI |
+| `&`  | Intersection |
+| `=>` | Match arrow |
+| `~`  | Partial application |
+| `?`  | Partial function |
+| `'`  | Prime |
+| `<:` | Subtype |
+
+
+Here is a more elaborate explanation of Pony's use of special characters: (a line with (2) or (3) means an alternate usage of the symbol of the previous  line)
+
+|Symbol | Usage|
+| --- | --- |
+| `,`  | to separate parameters in a function signature, or the items of a tuple |
+| `.`  | (1) to call a field or a function on a variable (field access or method call) |
+|    | (2) to qualify a type/method with its package name |
+| `.>` | to call a method on an object and return the receiver (chaining) |
+| `'`  | used as alternative name in parameters (prime) |
+| `"`  | to delineate a literal string |
+| `"""`  | to delineate a documentation string |
+| `(` | (1) start of line: start of a tuple |
+|    | (2) middle of line: method call |
+| `()` | (1) parentheses, for function or behavior parameters |
+|    | (2) making a tuple (values separated by `,`) |
+|    | (3) making an enumeration (values separated by <code>&#124;</code>) |
+| `[`  | (1) start of line: start of an array literal |
+|    | (2) middle of line: generic formal parameters |
+| `[]`  | (1) to indicate a generic type, for example `Range[U64]` |
+|      | (2) to indicate the return type of an FFI function call |
+| `{}`  | a function type |
+| `:`  | (1) after a variable: is followed by the type name |
+|    | (2) to indicate a function return type |
+|    | (3) a type constraint |
+| `;`  | only used to separate expressions on the same line |
+| `=`  | (1) (destructive) assignment |
+|    | (2) in: use alias = packname |
+| `!`  | (1) boolean negation |
+|    | (2) a type that is an alias of another type |
+| `?`  | (1) T?  type T or None |
+|    | (2) partial functions |
+|    | (3) a call to a C function that could raise an error |
+| `-`  | (1) start of line: unary negation |
+|    | (2) middle of line: subtraction |
+| `_`  | (1) to indicate a private variable, constructor, function, behavior |
+|    | (2) to ignore a tuple item in a pattern match |
+| `~`  | partial application |
+| `^`  | an ephemeral type |
+| <code>&#124;</code> | (1) separates the types in an enumeration (the value can be any of these types) |
+|    | (2) starts a branch in a match |
+| `&`  | (1) separates the types in a complex type (the value is of all of these types) |
+|    | (2) intersection |
+| `@`  | FFI call |
+| `//`  | comments |
+| `/* */`  | multi-line or block comments |
+| `=>`  | (1) start of a function body |
+|     | (2) starts the code of a matching branch |
+| `->`  | (1) arrow type |
+|     | (2) viewpoint |
+| `._i` | where `i = 1,2,…`  means the ith item of a tuple |
+| `<:`  | "is a subtype of" or "can be substituted for" |
