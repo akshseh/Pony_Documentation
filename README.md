@@ -742,26 +742,24 @@ You do not have to worry about any of this if you don't want to. You can simply 
 
 The full list of infix operators that are aliases for functions is:
 
----
 |Operator | Method   | Description|
 |---------|----------|------------|
-+        | add()    | Addition
--        | sub()    | Subtraction
-*        | mul()    | Multiplication
-/        | div()    | Division
-%        | mod()    | Modulus
-<<       | shl()    | Left bit shift
->>       | shr()    | Right bit shift
-and      | op_and() | And, both bitwise and logical
-or       | op_or()  | Or, both bitwise and logical
-xor      | op_xor() | Xor, both bitwise and logical
-==       | eq()     | Equality
-!=       | ne()     | Non-equality
-<        | lt()     | Less than
-<=       | le()     | Less than or equal
->=       | ge()     | Greater than or equal
->        | gt()     | Greater than
----
++        | add()    | Addition |
+-        | sub()    | Subtraction|
+*        | mul()    | Multiplication|
+/        | div()    | Division|
+%        | mod()    | Modulus|
+<<       | shl()    | Left bit shift |
+>>       | shr()    | Right bit shift |
+and      | op_and() | And, both bitwise and logical|
+or       | op_or()  | Or, both bitwise and logical|
+xor      | op_xor() | Xor, both bitwise and logical|
+==       | eq()     | Equality|
+!=       | ne()     | Non-equality|
+<        | lt()     | Less than|
+<=       | le()     | Less than or equal|
+>=       | ge()     | Greater than or equal|
+>        | gt()     | Greater than|
 
 ## Short circuiting
 
@@ -787,8 +785,8 @@ The full list of unary operators that are aliases for functions is:
 ---
 |Operator | Method   | Description|
 |---------|----------|------------|
--        | neg()    | Arithmetic negation
-not      | op_not() | Not, both bitwise and logical
+-        | neg()    | Arithmetic negation|
+not      | op_not() | Not, both bitwise and logical|
 ---
 
 # Control Structures
