@@ -1,9 +1,9 @@
 # Pony_Documentation
 
-#### What is Pony?
+### What is Pony?
 Pony is an open-source, object-oriented, actor-model, capabilities-secure, high-performance programming language.
 
-#### Why is it different?
+### Why is it different?
 - **Pony is type safe**: Really type safe. There’s a mathematical proof and everything.
 - **Pony is memory safe:** There are no dangling pointers and no buffer overruns. The language doesn’t even have the concept of null!
 - **Exception-Safe:** There are no runtime exceptions. All exceptions have defined semantics, and they are always caught.
@@ -13,7 +13,7 @@ Pony is an open-source, object-oriented, actor-model, capabilities-secure, high-
 - **Compatible with C#**: Pony programs can natively call C libraries. Our compiler is able to generate a C-header file for Pony libraries. Consequently, C/C++ programs can natively call Pony programs!
 
 
-#### Your first program
+### Your first program
 Let's learm to write a program to print "Hello, world!". First, create a directory called `helloworld`:
 ```
 $ mkdir helloworld
@@ -31,7 +31,7 @@ actor Main
     env.out.print("Hello, world!")
 ```
     
-#### Compiling your program
+### Compiling your program
 
 If you are in the same directory as your program, you can just do:
 ``` $ ponyc ```
@@ -41,13 +41,13 @@ That tells the Pony compiler that your current working directory contains your s
 $ ponyc path/to/my/code 
 ```
 
-#### Running your program
+### Running your program
 Now we can run the program:
 ```
 $ ./helloworld
 Hello, world! 
 ```
-#### How it works
+### How it works
 Let's go through that line by line.
 
 ##### Line 1
