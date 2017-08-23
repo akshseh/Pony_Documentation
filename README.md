@@ -98,15 +98,15 @@ __What's an Env, anyway?__ It's the "environment" your program was invoked with.
 
 Really, that's it. The program begins by creating a `Main` actor, and in the constructor, we print "Hello, world!" to __stdout__. Next, we'll start diving into the Pony type system.
 
-### The Pony Type System at a Glance
+## The Pony Type System
 
-Pony is a _statically typed_ language, like Java, C#, C++, and many others. This means the compiler knows the type of everything in your program. This is different from _dynamically typed_ languages, such as Python, Lua, JavaScript, and Ruby.
+Pony is a _statically typed_ language, like Java, C#, C++, and many others. This is different from _dynamically typed_ languages, such as Python, Lua, JavaScript, and Ruby.
 
-When you use a _statically typed_ language, a variable has a type. That is, it can only point to objects of a certain type (although in Pony, a type can actually be a collection of types, as we'll see later). If you have an `x` that expects to point to an integer, you can't assign a string to it. Your compiler complains, and it complains __before__ you ever try to run your program.
+When you use a _statically typed_ language, a variable has a type. That is, it can only point to objects of a certain type. If you have an `x` that expects to point to an integer, you can't assign a string to it. Your compiler complains, and it complains __before__ you ever try to run your program.
 
-# Classes
+## Classes
 
-Just like other object-oriented languages, Pony has __classes__. A class is declared with the keyword `class`, and it has to have a name that starts with a capital letter, like this:
+Just like other object-oriented languages, Pony has __classes__. A class is declared with the keyword `class`, and it has to have a name that starts with a __capital letter__, like this:
 
 ```pony
 class Wombat
@@ -114,7 +114,7 @@ class Wombat
 
 __Do all types start with a capital letter?__ Yes! And nothing else starts with a capital letter. So when you see a name in Pony code, you will instantly know whether it's a type or not.
 
-## What goes in a class?
+### What goes in a class?
 
 A class is composed of:
 
@@ -122,21 +122,21 @@ A class is composed of:
 2. Constructors.
 3. Functions.
 
-### Fields
+#### Fields
 
-These are just like fields in C structs or fields in classes in C++, C#, Java, Python, Ruby, or basically any language, really. There are three kinds of fields: `var`, `let`, and `embed` fields. A `var` field can be assigned to over and over again, but a `let` field is assigned to in the constructor and never again. Embed fields will be covered in more detail in the documentation on [variables](../expressions/variables.md).
+These are just like fields in C structs or fields in classes in C++, C#, Java, Python, Ruby, or basically any language, really. There are three kinds of fields: `var`, `let`, and `embed` fields. A `var` field can be assigned to over and over again, but a `let` field is assigned to in the constructor and never again. `embed` fields will be covered in more detail later.
 
 ```pony
 class Wombat
-  let name: String
-  var _hunger_level: U64
+  let name: String                //name can only take a string value and that too once
+  var _hunger_level: U64          //_hunger_level can take only integer value but it can be assigned over and over again
 ```
 
 Here, a `Wombat` has a `name`, which is a `String`, and a `_hunger_level`, which is a `U64` (an unsigned 64-bit integer).
 
 __What does the leading underscore mean?__ It means something is __private__. A __private__ field can only be accessed by code in the same type. A __private__ constructor, function, or behaviour can only be accessed by code in the same package. We'll talk more about packages later.
 
-### Constructors
+#### Constructors
 
 Pony constructors have names. Other than that, they are just like constructors in other languages. They can have parameters, and they always return a new instance of the type. Since they have names, you can have more than one constructor for a type.
 
@@ -147,11 +147,11 @@ class Wombat
   let name: String
   var _hunger_level: U64
 
-  new create(name': String) =>
+  new create(name': String) =>            //1st constructor
     name = name'
     _hunger_level = 0
 
-  new hungry(name': String, hunger': U64) =>
+  new hungry(name': String, hunger': U64) =>      //2nd constructor
     name = name'
     _hunger_level = hunger'
 ```
@@ -186,7 +186,7 @@ class Wombat
 
 Here, every `Wombat` begins a little bit thirsty, regardless of which constructor is called.
 
-### Functions
+#### Functions
 
 Functions in Pony are like methods in Java, C#, C++, Ruby, Python, or pretty much any other object oriented language. They are introduced with the keyword `fun`. They can have parameters like constructors do, and they can also have a result type (if no result type is given, it defaults to `None`).
 
@@ -204,9 +204,9 @@ class Wombat
     name = name'
     _hunger_level = hunger'
 
-  fun hunger(): U64 => _hunger_level
+  fun hunger(): U64 => _hunger_level            //1st function
 
-  fun ref set_hunger(to: U64 = 0): U64 => _hunger_level = to
+  fun ref set_hunger(to: U64 = 0): U64 => _hunger_level = to        //2nd function
 ```
 
 The first function, `hunger`, is pretty straight forward. It has a result type of `U64`, and it returns `_hunger_level`, which is a `U64`. The only thing a bit different here is that no `return` keyword is used. This is because the result of a function is the result of the last expression in the function, in this case, the value of `_hunger_level`.
