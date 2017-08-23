@@ -50,7 +50,7 @@ Hello, world!
 #### How it works
 Let's go through that line by line.
 
-## Line 1
+##### Line 1
 
 ```pony
 actor Main
@@ -62,7 +62,7 @@ The difference between an actor and a class is that an actor can have __asynchro
 
 A Pony program has to have a `Main` actor. It's kind of like the `main` function in C or C++, or the `main` method in Java, or the `Main` method in C#. It's where the action starts.
 
-## Line 2
+##### Line 2
 
 ```pony
   new create(env: Env) =>
@@ -80,7 +80,7 @@ It turns out, our `Main` actor __has__ to have a constructor called `create` tha
 
 __Wait, what's the body?__ It's the code that comes after the `=>`.
 
-## Line 3
+##### Line 3
 
 ```pony
     env.out.print("Hello, world!")
@@ -96,6 +96,6 @@ In Pony, string literals can be in double quotes, in which case they follow C/C+
 
 __What's an Env, anyway?__ It's the "environment" your program was invoked with. That means it has command line arguments, environment variables, __stdin__, __stdout__, and __stderr__. Pony has no global variables, so these things are explicitly passed to your program.
 
-## That's it!
+##### That's it!
 
 Really, that's it. The program begins by creating a `Main` actor, and in the constructor, we print "Hello, world!" to __stdout__. Next, we'll start diving into the Pony type system.
