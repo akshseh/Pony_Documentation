@@ -637,3 +637,684 @@ Those are all type aliases used by the standard library.
 
 __Is `Number` a type alias for a type expression that contains other type aliases?__ Yes! Fun, and convenient.
 
+# Variables
+
+Like most other programming languages Pony allows you to store data in variables. There are a few different kinds of variables which have different lifetimes and are used for slightly different purposes.
+
+## Local variables
+
+Local variables in Pony work very much as they do in other languages, allowing you to store temporary values while you perform calculations. Local variables live within a chunk of code (they are _local_ to that chunk) and are created every time that code chunk executes and disposed of when it completes.
+
+To define a local variable the `var` keyword is used (`let` can also be used, but we'll get to that later). Right after the `var` comes the variable's name, and then you can (optionally) put a `:` followed by the variable's type. For example:
+
+```pony
+var x: String = "Hello"
+```
+
+Here, we're assigning the __string literal__ `"Hello"` to `x`.
+
+You don't have to give a value to the variable when you define it: you can assign one later if you prefer. If you try to read the value from a variable before you've assigned one, the compiler will complain instead of allowing the dreaded _uninitialised variable_ bug.
+
+Every variable has a type, but you don't have to specify it in the declaration if you provide an initial value. The compiler will automatically use the type of the initial value of the variable.
+
+The following definitions of `x`, `y` and `z` are all effectively identical.
+
+```pony
+var x: String = "Hello"
+
+var y = "Hello"
+
+var z: String
+z = "Hello"
+```
+
+__Can I miss out both the type and initial value for a variable?__ No. The compiler will complain that it can't figure out a type for that variable.
+
+All local variable names start with a lowercase letter. If you want to you can end them with a _prime_ `'` (or more than one) which is useful when you need a second variable with almost the same meaning as the first. For example, you might have one variable called `time` and another called `time'`.
+
+The chunk of code that a variable lives in is known as its __scope__. Exactly what its scope is depends on where it is defined. For example, the scope of a variable defined within the `then` expression of an `if` statement is that `then` expression. We haven't looked at `if` statements yet, but they're very similar to every other language.
+
+```pony
+if a > b then
+  var x = "a is bigger"
+  env.out.print(x)  // OK
+end
+
+env.out.print(x)  // Illegal
+```
+
+Variables only exist from when they are defined until the end of the current scope. For our variable `x` this is the `end` at the end of the then expression: after that, it cannot be used.
+
+## Var vs. let
+
+Local variables are declared with either a `var` or a `let`. Using `var` means the variable can be assigned and reassigned as many times as you like. Using `let` means the variable can only be assigned once.
+
+```pony
+var x: U32 = 3
+let y: U32 = 4
+x = 5  // OK
+y = 6  // Error, y is let
+```
+
+You never have to declare variables as `let`, but if you know you're never going to change a variable then using `let` is a good way to catch errors. It can also serve as a useful comment, indicating the value is not meant to be changed.
+
+## Fields
+
+In Pony, fields are variables that live within objects. They work like fields in other object-oriented languages.
+
+Fields have the same lifetime as the object they're in, rather than being scoped. They are set up by the object constructor and disposed of along with the object.
+
+If the name of a field starts with `_`, it's __private__. That means only the type the field is in can have code that reads or writes that field. Otherwise, the field is __public__ and can be read or written from anywhere.
+
+Just like local variables, fields can be `var` or `let`. They can also have an initial value assigned in their definition, just like local variables, or they can be given their initial value in a constructor.
+
+__Can fields come after the constructor?__ No. To keep Pony's grammar unambiguous, only type aliases are allowed between an `actor Name`, `object is Trait`, etc. and a field definition. In any case, it's good style to make such variables easily visible to the programmer because fields are accessible from _any_ method of the type they're in.
+
+Unlike local variables, some types of fields can be declared using `embed`. Specifically, only classes or structs can be embedded - interfaces, traits, primitives and numeric types cannot. A field declared using `embed` is similar to one declared using `let`, but at the implementation level, the memory for the embedded class is laid out directly within the outer class. Contrast this with `let` or `var`, where the implementation uses pointers to reference the field class. Embedded fields can be passed to other functions in exactly the same way as `let` or `var` fields. Embedded fields must be initialised from a constructor expression.
+
+__Why would I use `embed`?__ `embed` avoids a pointer indirection when accessing a field and a separate memory allocation when creating that field. By default, it is advised to use `embed` if possible. However, since an embedded field is allocated alongside its parent object, exterior references to the field forbids garbage collection of the parent, which can result in higher memory usage if a field outlives its parent. Use `let` if this is a concern for you.
+
+## Globals
+
+Some programming languages have __global variables__ that can be accessed from anywhere in the code. What a bad idea! Pony doesn't have global variables at all.
+
+## Shadowing
+
+Some programming languages let you declare a variable with the same name as an existing variable, and then there are rules about which one you get. This is called _shadowing_, and it's a source of bugs. If you accidentally shadow a variable in Pony, the compiler will complain.
+
+If you need a variable with _nearly_ the same name, you can use a prime `'`.
+
+# Infix Operators
+
+Infix operators take two operands and are written between those operands. Arithmetic and comparison operators are the most common:
+
+```pony
+1 + 2
+a < b
+```
+
+Pony has pretty much the same set of infix operators as other languages.
+
+## Precedence
+
+When using infix operators in complex expressions a key question is the __precedence__, i.e. which operator is evaluated first. Given this expression:
+
+```pony
+1 + 2 * 3
+```
+
+We will get a value of 9 if we evaluate the addition first and 7 if we evaluate the multiplication first. In mathematics, there are rules about the order in which to evaluate operators and most programming languages follow this approach.
+
+The problem with this is that the programmer has to remember the order and people aren't very good at things like that. Most people will remember to do multiplication before addition, but what about left bit shifting versus bitwise and? Sometimes people misremember (or guess wrong) and that leads to bugs. Worse, those bugs are often very hard to spot.
+
+Pony takes a different approach and outlaws infix precedence. Any expression where more than one infix operator is used __must__ use parentheses to remove the ambiguity. If you fail to do this the compiler will complain.
+
+This means that the example above is illegal in Pony and should be rewritten as:
+
+```pony
+1 + (2 * 3)
+```
+
+Repeated use of a single operator, however, is fine:
+
+```pony
+1 + 2 + 3
+```
+
+## Operator aliasing
+
+Most infix operators in Pony are actually aliases for functions. The left operand is the receiver the function is called on and the right operand is passed as an argument. For example, the following expressions are equivalent:
+
+```pony
+x + y
+x.add(y)
+```
+
+This means that `+` is not a special symbol that can only be applied to magic types. Any type can provide its own `add` function and the programmer can then use `+` with that type if they want to.
+
+When defining your own `add` function there is no restriction on the types of the parameter or the return type. The right side of the `+` will have to match the parameter type and the whole `+` expression will have the type that `add` returns.
+
+Here's a full example for defining a type which allows the use of `+`. This is all you need:
+
+```pony
+// Define a suitable type
+class Pair
+  var _x: U32 = 0
+  var _y: U32 = 0
+
+  new create(x: U32, y: U32) =>
+    _x = x
+    _y = y
+
+  // Define a + function
+  fun add(other: Pair): Pair =>
+    Pair(_x + other._x, _y + other._y)
+
+// Now let's use it
+class Foo
+  fun foo() =>
+    var x = Pair(1, 2)
+    var y = Pair(3, 4)
+    var z = x + y
+```
+
+[Case functions](http://tutorial.ponylang.org/pattern-matching/case-functions.html) can be used to provide more than one `add` function. It is also possible to overload infix operators to some degree using union types or f-bounded polymorphism, but this is beyond the scope of this tutorial. See the Pony standard library for further information.
+
+You do not have to worry about any of this if you don't want to. You can simply use the existing infix operators for numbers just like any other language and not provide them for your own types.
+
+The full list of infix operators that are aliases for functions is:
+
+---
+
+Operator | Method   | Description
+---------|----------|------------
++        | add()    | Addition
+-        | sub()    | Subtraction
+*        | mul()    | Multiplication
+/        | div()    | Division
+%        | mod()    | Modulus
+<<       | shl()    | Left bit shift
+>>       | shr()    | Right bit shift
+and      | op_and() | And, both bitwise and logical
+or       | op_or()  | Or, both bitwise and logical
+xor      | op_xor() | Xor, both bitwise and logical
+==       | eq()     | Equality
+!=       | ne()     | Non-equality
+<        | lt()     | Less than
+<=       | le()     | Less than or equal
+>=       | ge()     | Greater than or equal
+>        | gt()     | Greater than
+
+---
+
+## Short circuiting
+
+The `and` and `or` operators use __short circuiting__ when used with Bool variables. This means that the first operand is always evaluated, but the second is only evaluated if it can affect the result.
+
+For `and`, if the first operand is __false__ then the second operand is not evaluated since it cannot affect the result.
+
+For `or`, if the first operand is __true__ then the second operand is not evaluated since it cannot affect the result.
+
+This is a special feature built into the compiler, it cannot be used with operator aliasing for any other type.
+
+## Unary operators
+
+The unary operators are handled in the same manner, but with only one operand. For example, the following expressions are equivalent:
+
+```pony
+-x
+x.neg()
+```
+
+The full list of unary operators that are aliases for functions is:
+
+---
+
+Operator | Method   | Description
+---------|----------|------------
+-        | neg()    | Arithmetic negation
+not      | op_not() | Not, both bitwise and logical
+
+---
+
+# Control Structures
+
+To do real work in a program you have to be able to make decisions, iterate through collections of items and perform actions repeatedly. For this, you need control structures. Pony has control structures that will be familiar to programmers who have used most languages, such as `if`, `while` and `for`, but in Pony, they work slightly differently.
+
+## Conditionals
+
+The simplest control structure is the good old `if`. It allows you to perform some action only when a condition is true. In Pony it looks like this:
+
+```pony
+if a > b then
+  env.out.print("a is bigger")
+end
+```
+
+__Can I use integers and pointers for the condition like I can in C?__ No. In Pony `if` conditions must have type Bool, i.e. they are always true or false. If you want to test whether a number `a` is not 0, then you need to explicitly say `a != 0`. This restriction removes a whole category of potential bugs from Pony programs.
+
+If you want some alternative code for when the condition fails just add an `else`:
+
+```pony
+if a > b then
+  env.out.print("a is bigger")
+else
+  env.out.print("a is not bigger")
+end
+```
+
+Often you want to test more than one condition in one go, giving you more than two possible outcomes. You can nest `if` statements, but this quickly gets ugly:
+
+```pony
+if a == b then
+  env.out.print("they are the same")
+else
+  if a > b then
+    env.out.print("a is bigger")
+  else
+    env.out.print("b bigger")
+  end
+end
+```
+
+As an alternative Pony provides the `elseif` keyword that combines an `else` and an `if`. This works the same as saying `else if` in other languages and you can have as many `elseif`s as you like for each `if`.
+
+```pony
+if a == b then
+  env.out.print("they are the same")
+elseif a > b then
+  env.out.print("a is bigger")
+else
+  env.out.print("b bigger")
+end
+```
+
+__Why can't I just say "else if" like I do in C? Why the extra keyword?__ The relationship between `if` and `else` in C, and other similar languages, is ambiguous. For example:
+
+```C
+// C code
+if(a)
+  if(b)
+    printf("a and b\n");
+else
+  printf("not a\n");
+```
+Here it is not obvious whether the `else` is an alternative to the first or the second `if`. In fact here the `else` relates to the `if(b)` so our example contains a bug. Pony avoids this type of bug by handling `if` and `else` differently and the need for `elseif` comes out of that.
+
+## Everything is an expression
+
+The big difference for control structures between Pony and other languages is that in Pony everything is an expression. In languages like C++ and Java `if` is a statement, not an expression. This means that you can't have an `if` inside an expression, there has to be a separate conditional operator '?'.
+
+In Pony there are no statements there are only expressions, everything hands back a value. Your `if` statement hands you back a value. Your `for` loop (which we'll get to a bit later) hands you back a value.
+
+This means you can use `if` directly in a calculation:
+
+```pony
+x = 1 + if lots then 100 else 2 end
+```
+
+This will give __x__ a value of either 3 or 101, depending on the variable __lots__.
+
+If the `then` and `else` branches of an `if` produce different types then the `if` produces a __union__ of the two.
+
+```pony
+var x: (String | Bool) =
+  if friendly then
+    "Hello"
+  else
+    false
+  end
+```
+
+__But what if my if doesn't have an else?__ Any `else` branch that doesn't exist gives an implicit `None`.
+
+```pony
+var x: (String | None) =
+  if friendly then
+    "Hello"
+  end
+```
+
+__Does Pony still have the conditional operator "?"?__ No, it's not needed. Just use `if`.
+
+## Loops
+
+`if` allows you to choose what to do, but to do something more than once you want a loop.
+
+### While
+
+Pony `while` loops are very similar to those in other languages. A condition expression is evaluated and if it's true we execute the code inside the loop. When we're done we evaluate the condition again and keep going until it's false.
+
+Here's an example that prints out the numbers 1 to 10:
+
+```pony
+var count: U32 = 1
+
+while count <= 10 do
+  env.out.print(count.string())
+  count = count + 1
+end
+```
+
+Just like `if` expressions `while` is also an expression. The value returned is just the value of the expression inside the loop the last time we go round it. For this example that will be the value given by `count = count + 1` when count is incremented to 11. Since Pony assignments hand back the _old_ value our `while` loop will return 10.
+
+__But what if the condition evaluates to false the first time we try, then we don't go round the loop at all?__ In Pony `while` expressions can also have an `else` block. In general, Pony `else` blocks provide a value when the expression they are attached to doesn't. A `while` doesn't have a value to give if the condition evaluates to false the first time, so the `else` provides it instead.
+
+__So is this like an else block on a while loop in Python?__ No, this is very different. In Python, the `else` is run when the `while` completes. In Pony the `else` is only run when the expression in the `while` isn't.
+
+### Break
+
+Sometimes you want to stop part-way through a loop and give up altogether. Pony has the `break` keyword for this and it is very similar to its counterpart in languages like C++, C#, and Python.
+
+`break` immediately exits from the innermost loop it's in. Since the loop has to return a value `break` can take an expression. This is optional and if it's missed out the value from the `else` block is returned.
+
+Let's have an example. Suppose you want to go through a list of names you're getting from somewhere, looking for either "Jack" or "Jill". If neither of those appear you'll just take the last name you're given and if you're not given any names at all you'll use "Herbert".
+
+```pony
+var name =
+  while moreNames() do
+    var name' = getName()
+    if name' == "Jack" or name' == "Jill" then
+      break name'
+    end
+    name'
+  else
+    "Herbert"
+  end
+```
+
+So first we ask if there are any more names to get. If there are then we get a name and see if it's "Jack" or "Jill". If it is we're done and we break out of the loop, handing back the name we've found. If not we try again.
+
+The line `name'` appears at the end of the loop so that will be our value returned from the last iteration if neither "Jack" nor "Jill" is found.
+
+The `else` block provides our value of "Herbert" if there are no names available at all.
+
+__Can I break out of multiple, nested loops like the Java labeled break?__ No, Pony does not support that. If you need to break out of multiple loops you should probably refactor your code or use a worker function.
+
+### Continue
+
+Sometimes you want to stop part-way through one loop iteration and move onto the next. Like other languages, Pony uses the `continue` keyword for this.
+
+`continue` stops executing the current iteration of the innermost loop it's in and evaluates the condition ready for the next iteration.
+
+If `continue` is executed during the last iteration of the loop then we have no value to return from the loop. In this case, we use the loop's `else` expression to get a value. As with the `if` expression if no `else` expression is provided `None` is returned.
+
+__Can I continue an outer, nested loop like the Java labeled continue?__ No, Pony does not support that. If you need to continue an outer loop you should probably refactor your code.
+
+### For
+
+For iterating over a collection of items Pony uses the `for` keyword. This is very similar to `foreach` in C#, `for`..`in` in Python and `for` in Java when used with a collection. It is very different to `for` in C and C++.
+
+The Pony `for` loop iterates over a collection of items using an iterator. On each iteration, round the loop, we ask the iterator if there are any more elements to process and if there are we ask it for the next one.
+
+For example to print out all the strings in an array:
+
+```pony
+for name in ["Bob"; "Fred"; "Sarah"].values() do
+  env.out.print(name)
+end
+```
+
+Note the call to `values()` on the array, this is because the loop needs an iterator, not an array.
+
+The iterator does not have to be of any particular type, but needs to provide the following methods:
+```pony
+  fun has_next(): Bool
+  fun next(): T?
+```
+
+where T is the type of the objects in the collection. You don't need to worry about this unless you're writing your own iterators. To use existing collections, such as those provided in the standard library, you can just use `for` and it will all work. If you do write your own iterators note that we use structural typing, so your iterator doesn't need to declare that it provides any particular type.
+
+You can think of the above example as being equivalent to:
+
+```pony
+let iterator = ["Bob"; "Fred"; "Sarah"].values()
+while iterator.has_next() do
+  let name = iterator.next()?
+  env.out.print(name)
+end
+```
+
+Note that the variable __name__ is declared _let_, you cannot assign to the control variable within the loop.
+
+__Can I use break and continue with for loops?__ Yes, `for` loops can have `else` expressions attached and can use `break` and `continue` just as for `while`.
+
+### Repeat
+
+The final loop construct that Pony provides is `repeat` `until`. Here we evaluate the expression in the loop and then evaluate a condition expression to see if we're done or we should go round again.
+
+This is similar to `do` `while` in C++, C# and Java except that the termination condition is reversed, i.e. those languages terminate the loop when the condition expression is false, Pony terminates the loop when the condition expression is true.
+
+The differences between `while` and `repeat` in Pony are:
+
+1. We always go around the loop at least once with `repeat`, whereas with `while` we may not go round at all.
+1. The termination condition is reversed.
+
+Suppose we're trying to create something and we want to keep trying until it's good enough:
+
+```pony
+repeat
+  var present = makePresent()
+until present.marksOutOfTen() > 7 end
+```
+
+Just like `while` loops the value given by a `repeat` loop is the value of the expression within the loop on the last iteration and `break` and `continue` can be used.
+
+__Since you always go round a repeat loop at least once do you ever need to give it an else expression?__ Yes, you may need to. A `continue` in the last iteration of a `repeat` loop needs to get a value from somewhere and an `else` expression is used for that.
+
+# Methods
+
+All Pony code that actually does something, rather than defining types etc, appears in named blocks which are referred to as methods. There are three kinds of methods: functions, constructors, and behaviours. All methods are attached to type definitions (e.g. classes) - there are no global functions.
+
+Behaviours are used for handling asynchronous messages sent to actors. We'll look at those later.
+
+__Can I have some code outside of any methods like I do in Python?__ No. All Pony code must be within a method.
+
+## Functions
+
+Pony functions are quite like functions (or methods) in other languages. They can have 0 or more parameters and 0 or 1 return values. If the return type is omitted then the function will have a return value of `None`.
+
+```pony
+class C
+  fun add(x: U32, y: U32): U32 =>
+    x + y
+
+  fun nop() =>
+    add(1, 2)  // Pointless, we ignore the result
+```
+
+The function parameters (if any) are specified in parentheses after the function name. Functions that don't take any parameters still need to have the parentheses.
+
+Each parameter is given a name and a type. In our example function `add` has 2 parameters, `x` and `y`, both of which are type `U32`. The values passed to a function call (the `1` and `2` in our example) are called arguments and when the call is made they are evaluated and assigned to the parameters. Parameters may not be assigned to within the function - they are effectively declared `let`.
+
+After the parameters comes the return type. If nothing will be returned this is simply omitted.
+
+After the return value, there's a `=>` and then finally the function body. The value returned is simply the value of the function body (remember that everything is an expression), which is simply the value of the last command in the function.
+
+If you want to exit a function early then use the `return` command. If the function has a return type then you need to provide a value to return. If the function does not have a return type then `return` should appear on its own, without a value.
+
+Pony applies tail call optimization when applicable to allow a recursive implementation such as the following factorial function:
+
+```pony
+fun factorial(x: I32): I32 ? =>
+  if x < 0 then error end
+  if x == 0 then
+    1
+  else
+    x * factorial(x - 1)?
+  end
+```
+The exact requirements to qualify for this optimization depends on the version of the LLVM compiler.
+
+__Can I overload functions by argument type?__ [Case functions](http://tutorial.ponylang.org/pattern-matching/case-functions.html) provide a mechanism for providing several functions with the same name with different implementations that are selected by argument type.
+
+## Constructors
+
+Pony constructors are used to initialise newly created objects, as in many languages. However, unlike many languages, Pony constructors are named so you can have as many as you like, taking whatever parameters you like. By convention, the main constructor of each type (if there is such a thing for any given type) is called `create`.
+
+```pony
+class Foo
+  var _x: U32
+
+  new create() =>
+    _x = 0
+
+  new from_int(x: U32) =>
+    _x = x
+```
+
+The purpose of a constructor is to set up the internal state of the object being created. To ensure this is done constructors must initialise all the fields in the object being constructed.
+
+__Can I exit a constructor early?__ Yes. Just then use the `return` command without a value. The object must already be in a legal state to do this.
+
+## Calling
+
+As in many other languages, methods in Pony are called by providing the arguments within parentheses after the method name. The parentheses are required even if there are no arguments being passed to the method.
+
+```pony
+class Foo
+  fun hello(name: String): String =>
+    "hello " + name
+
+  fun f() =>
+    let a = hello("Fred")
+```
+
+Constructors are usually called "on" a type, by specifying the type that is to be created. To do this just specify the type, followed by a dot, followed by the name of the constructor you want to call.
+
+```pony
+class Foo
+  var _x: U32
+
+  new create() =>
+    _x = 0
+
+  new from_int(x: U32) =>
+    _x = x
+
+class Bar
+  fun f() =>
+    var a: Foo = Foo.create()
+    var b: Foo = Foo.from_int(3)
+```
+
+Functions are always called on an object. Again just specify the object, followed by a dot, followed by the name of the function to call. If the object to call on is omitted then the current object is used (i.e. `this`).
+
+```pony
+class Foo
+  var _x: U32
+
+  new create() =>
+    _x = 0
+
+  new from_int(x: U32) =>
+    _x = x
+
+  fun get(): U32 =>
+    _x
+
+class Bar
+  fun f() =>
+    var a: Foo = Foo.from_int(3)
+    var b: U32 = a.get()
+    var c: U32 = g(b)
+
+  fun g(x: U32): U32 =>
+    x + 1
+
+```
+
+Constructors can also be called on an expression. Here an object is created of the same type as the specified expression - this is equivalent to directly specifying the type.
+
+```pony
+class Foo
+  var _x: U32
+
+  new create() =>
+    _x = 0
+
+  new from_int(x: U32) =>
+    _x = x
+
+class Bar
+  fun f() =>
+    var a: Foo = Foo.create()
+    var b: Foo = a.from_int(3)
+```
+
+## Default arguments
+
+When defining a method you can provide default values for any of the arguments. The caller then has the choice to use the values you have provided or to provide their own. Default argument values are specified with a `=` after the parameter name.
+
+```pony
+class Coord
+  var _x: U32
+  var _y: U32
+
+  new create(x: U32 = 0, y: U32 = 0) =>
+    _x = x
+    _y = y
+
+class Bar
+  fun f() =>
+    var a: Coord = Coord.create()     // Contains (0, 0)
+    var b: Coord = Coord.create(3)    // Contains (3, 0)
+    var b: Coord = Coord.create(3, 4) // Contains (3, 4)
+```
+
+__Do I have to provide default values for all of my arguments?__ No, you can provide defaults for as many, or as few, as you like.
+
+## Named arguments
+
+So far, when calling methods we have always given all the arguments in order. This is known as using __positional__ arguments. However, you can also specify the arguments in any order you like by specifying their names. This is known as using __named__ arguments.
+
+To call a method using named arguments use the `where` keyword, followed by the named arguments and their values.
+
+```pony
+class Coord
+  var _x: U32
+  var _y: U32
+
+  new create(x: U32 = 0, y: U32 = 0) =>
+    _x = x
+    _y = y
+
+class Bar
+  fun f() =>
+    var a: Coord = Coord.create(where y = 4, x = 3)
+```
+
+__Should I specify `where` for each named argument?__ No. There must only be one `where` in each method call.
+
+Named and positional arguments can be used together in a single call. Just start with the positional arguments you want to specify, then a `where` and finally the named arguments. But be careful, each argument must be specified only once.
+
+Default arguments can also be used in combination with positional and named arguments - just miss out any for which you want to use the default.
+
+```pony
+class Foo
+  fun f(a:U32 = 1, b: U32 = 2, c: U32 = 3, d: U32 = 4, e: U32 = 5): U32  =>
+    0
+
+  fun g() =>
+    f(6, 7 where d = 8)
+    // Equivalent to:
+    f(6, 7, 3, 8, 5)
+```
+
+__Can I call using positional arguments but miss out the first one?__ No. If you use positional arguments they must be the first ones in the call.
+
+## Chaining
+
+Method chaining allows you to chain calls on an object without requiring the method to return its receiver. The syntax to call a method and chain the receiver is `object.>method()`, which is roughly equivalent to `(object.method() ; object)`. Chaining a method discards its normal return value.
+
+```pony
+primitive Printer
+  fun print_two_strings(out: StdStream, s1: String, s2: String) =>
+    out.>print(s1).>print(s2)
+    // Equivalent to:
+    out.print(s1)
+    out.print(s2)
+    out
+```
+
+Note that the last `.>` in a chain can be a `.` if the return value of the last call matters.
+
+```pony
+interface Factory
+  fun add_option(o: Option)
+  fun make_object(): Object
+
+primitive Foo
+  fun object_wrong(f: Factory, o1: Option, o2: Option): Object =>
+    f.>add_option(o1).>add_option(o2).>make_object() // Error! The expression returns a Factory
+
+  fun object_right(f: Factory, o1: Option, o2: Option): Object =>
+    f.>add_option(o1).>add_option(o2).make_object() // Works. The expression returns an Object
+```
+
+## Privacy
+
+In Pony method names start either with a lower case letter or with an underscore followed by a lowercase letter. Methods with a leading underscore are private. This means they can only be called by code within the same package. Methods without a leading underscore are public and can be called by anyone.
+
+__Can I start my method name with 2 (or more) underscores?__ No. If the first character is an underscore then the second one MUST be a lower case letter.
+
