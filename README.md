@@ -31,7 +31,7 @@ actor Main
     env.out.print("Hello, world!")
 ```
     
-### Compiling your program
+#### Compiling your program
 
 If you are in the same directory as your program, you can just do:
 ``` $ ponyc ```
@@ -41,13 +41,13 @@ That tells the Pony compiler that your current working directory contains your s
 $ ponyc path/to/my/code 
 ```
 
-### Running your program
+#### Running your program
 Now we can run the program:
 ```
 $ ./helloworld
 Hello, world! 
 ```
-### How it works
+#### How it works
 Let's go through that line by line.
 
 ##### Line 1
