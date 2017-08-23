@@ -246,7 +246,7 @@ In Pony, you can just do:
 a = b = a
 ```
 
-### Finalisers
+#### Finalisers
 
 Finalisers are special functions. They are named `_final`, take no parameters and have a receiver reference capability of `box`. In other words, the definition of a finaliser must be `fun _final()`.
 
@@ -254,7 +254,7 @@ The finaliser of an object is called before the object is collected by the GC. F
 
 Finalisers are usually used to clean up resources allocated in C code, like file handles, network sockets, etc.
 
-## What about inheritance?
+#### What about inheritance?
 
 In some object-oriented languages, a type can _inherit_ from another type, like how in Java something can __extend__ something else. Pony doesn't do that. Instead, Pony prefers _composition_ to _inheritance_. In other words, instead of getting code reuse by saying something __is__ something else, you get it by saying something __has__ something else.
 
@@ -262,15 +262,15 @@ On the other hand, Pony has a powerful __trait__ system (similar to Java 8 inter
 
 We'll talk about all that stuff in detail later.
 
-## Naming rules
+#### Naming rules
 
-By now it shouldn't be very surprising to learn that Pony is written in __ASCII__. [ASCII](https://en.wikipedia.org/wiki/ASCII) is a standard text encoding that uses English characters and symbols, and almost every programming language in existence defines source code as a subset of it.
+Pony is written in __ASCII__. [ASCII](https://en.wikipedia.org/wiki/ASCII) is a standard text encoding that uses English characters and symbols.
 
 A Pony type, whether it's a class, actor, trait, interface, primitive, or type alias, must start with an uppercase letter. After an underscore for private or special _methods_ (behaviors, constructors, and functions), any method or variable, including parameters and fields, must start with a lowercase letter. In all cases underscores in a row or at the end of a name are not allowed, but otherwise, any combination of letters and numbers is legal.
 
 In fact, numbers may use single underscores inside as a separator too! But only valid variable names can end in primes.
 
-# Primitives
+### Primitives
 
 A __primitive__ is similar to a __class__, but there are two critical differences:
 
@@ -289,7 +289,7 @@ There are three main uses of primitives (four, if you count built-in "machine wo
 
 Primitives are quite powerful, particularly as enumerations. Unlike enumerations in other languages, each "value" in the enumeration is a complete type, which makes attaching data and functionality to enumeration values easy.
 
-## Built-in primitive types
+#### Built-in primitive types
 
 The __primitive__ keyword is also used to introduce certain built-in "machine word" types. Other than having a value associated with them, these work like user-defined primitives. These are:
 
@@ -300,69 +300,10 @@ The __primitive__ keyword is also used to introduce certain built-in "machine wo
 
 __ISize/USize__ correspond to the bit width of the native type `size_t`, which varies by platform. __ILong/ULong__ similarly correspond to the bit width of the native type `long`, which also varies by platform. The bit width of a native `int` is the same across all the platforms that Pony supports, and you can use __I32/U32__ for this.
 
-## Primitive initialisation and finalisation
+#### Primitive initialisation and finalisation
 
 Primitives can have two special functions, `_init` and `_final`. `_init` is called before any actor starts. `_final` is called after all actors have terminated. The two functions take no parameter. The `_init` and `_final` functions for different primitives always run sequentially.
 
-A common use case for this is initialising and cleaning up C libraries without risking untimely use by an actor.
-
-# Actors
-
-An __actor__ is similar to a __class__, but with one critical difference: an actor can have __behaviours__.
-
-## Behaviours
-
-A __behaviour__ is like a __function__, except that functions are _synchronous_ and behaviours are _asynchronous_. In other words, when you call a function, the body of the function is executed immediately, and the result of the call is the result of the body of the function. This is just like method invocation in any other object-oriented language.
-
-But when you call a behaviour, the body is __not__ executed immediately. Instead, the body of the behaviour will execute at some indeterminate time in the future.
-
-A behaviour looks like a function, but instead of being introduced with the keyword `fun`, it is introduced with the keyword `be`.
-
-Like a function, a behaviour can have parameters. Unlike a function, it doesn't have a receiver capability (a behaviour can be called on a receiver of any capability) and you can't specify a return type.
-
-__So what does a behaviour return?__ Behaviours always return `None`, like a function without explicit result type, because they can't return something they calculate (since they haven't run yet).
-
-```pony
-actor Aardvark
-  let name: String
-  var _hunger_level: U64 = 0
-
-  new create(name': String) =>
-    name = name'
-
-  be eat(amount: U64) =>
-    _hunger_level = _hunger_level - amount.min(_hunger_level)
-```
-
-Here we have an `Aardvark` that can eat asynchronously. Clever Aardvark.
-
-## Concurrent
-
-Since behaviours are asynchronous, it's ok to run the body of a bunch of behaviours at the same time. This is exactly what Pony does. The Pony runtime has its own scheduler, which by default has a number of threads equal to the number of CPU cores on your machine. Each scheduler thread can be executing an actor behaviour at any given time, so Pony programs are naturally concurrent.
-
-## Sequential
-
-Actors themselves, however, are sequential. That is, each actor will only execute one behaviour at a time. This means all the code in an actor can be written without caring about concurrency: no need for locks or semaphores or anything like that.
-
-When you're writing Pony code, it's nice to think of actors not as a unit of parallelism, but as a unit of sequentiality. That is, an actor should do only what _has_ to be done sequentially. Anything else can be broken out into another actor, making it automatically parallel.
-
-## Why is this safe?
-
-Because of Pony's __capabilities secure type system__. We've mentioned reference capabilities briefly before when talking about function receiver reference capabilities. The short version is that they are annotations on a type that make all this parallelism safe without any runtime overhead.
-
-We will cover reference capabilities in depth later.
-
-## Actors are cheap
-
-If you've done concurrent programming before, you'll know that threads can be expensive. Context switches can cause problems, each thread needs a stack (which can be a lot of memory), and you need lots of locks and other mechanisms to write thread-safe code.
-
-But actors are cheap. Really cheap. The extra cost of an actor, as opposed to an object, is about 256 bytes of memory. Bytes, not kilobytes! And there are no locks and no context switches. An actor that isn't executing consumes no resources other than the few extra bytes of memory.
-
-It's pretty normal to write a Pony program that uses hundreds of thousands of actors.
-
-## Actor finalisers
-
-Like classes, actors can have finalisers. The finaliser definition is the same (`fun _final()`). All guarantees and restrictions for a class finaliser are also valid for an actor finaliser. In addition, an actor will not receive any further message after its finaliser is called.
 
 # Traits and Interfaces
 
